@@ -40,6 +40,21 @@ COPY dockerd-entrypoint.sh /usr/local/bin/
 VOLUME /var/lib/docker
 EXPOSE 2375
 
+# adding java
+RUN apk update && apk upgrade && \
+    apk add openjdk8 && \
+    mkdir /tmp/tmprt && \
+    cd /tmp/tmprt && \
+    apk add zip && \
+    unzip -q /usr/lib/jvm/default-jvm/jre/lib/rt.jar && \
+    apk add zip && \
+    zip -q -r /tmp/rt.zip . && \
+    apk del zip && \
+    cd /tmp && \
+    mv rt.zip /usr/lib/jvm/default-jvm/jre/lib/rt.jar && \
+    rm -rf /tmp/tmprt /var/cache/apk/* bin/jjs bin/keytool bin/orbd bin/pack200 bin/policytool \
+          bin/rmid bin/rmiregistry bin/servertool bin/tnameserv bin/unpack200
+# adding jenkins slave
 ARG VERSION=3.28
 ARG user=jenkins
 ARG group=jenkins
@@ -47,9 +62,13 @@ ARG uid=1000
 ARG gid=1000
 
 ENV HOME /home/${user}
+
 RUN addgroup -g ${gid} ${group}
-RUN adduser -h $HOME -u ${uid} -G ${group} -D ${user}
-LABEL Description="This is a base image, which provides the Jenkins agent executable (slave.jar)" Vendor="Jenkins project" Version="${VERSION}"
+RUN addgroup docker
+RUN adduser -h $HOME -u ${uid} -G ${group} -G dockremap -G docker -G wheel -D ${user}
+
+RUN apk --no-cache add shadow && usermod -aG docker jenkins
+
 
 ARG AGENT_WORKDIR=/home/${user}/agent
 
@@ -66,6 +85,8 @@ VOLUME /home/${user}/.jenkins
 VOLUME ${AGENT_WORKDIR}
 WORKDIR /home/${user}
 
-USER root
+
+COPY jenkins-slave /usr/local/bin/jenkins-slave
+
 ENTRYPOINT ["/usr/local/bin/dockerd-entrypoint.sh"]
 CMD []

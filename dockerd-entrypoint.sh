@@ -19,4 +19,5 @@ if [ "$1" = 'dockerd' ]; then
 	find /run /var/run -iname 'docker*.pid' -delete
 fi
 
-exec "$@"
+# exec "$@"
+/usr/local/bin/jenkins-slave
