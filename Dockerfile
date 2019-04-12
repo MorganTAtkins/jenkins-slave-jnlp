@@ -63,9 +63,9 @@ ARG gid=1000
 
 ENV HOME /home/${user}
 
-RUN addgroup -g ${gid} ${group}
-RUN addgroup docker
-RUN adduser -h $HOME -u ${uid} -G ${group} -G dockremap -G docker -G root -D ${user}
+RUN addgroup -g ${gid} ${group} && \
+		addgroup docker && \
+		adduser -h $HOME -u ${uid} -G ${group} -G dockremap -G docker -G root -D ${user}
 
 RUN apk --no-cache add shadow && usermod -aG docker jenkins && usermod -aG dockremap jenkins
 
@@ -82,7 +82,8 @@ RUN apk add --update --no-cache curl bash git openssh-client openssl procps \
   && apk del curl
 USER ${user}
 ENV AGENT_WORKDIR=${AGENT_WORKDIR}
-RUN mkdir /home/${user}/.jenkins && mkdir -p ${AGENT_WORKDIR}
+RUN mkdir /home/${user}/.jenkins && \
+		mkdir -p ${AGENT_WORKDIR}
 
 VOLUME /home/${user}/.jenkins
 VOLUME ${AGENT_WORKDIR}
