@@ -65,10 +65,13 @@ ENV HOME /home/${user}
 
 RUN addgroup -g ${gid} ${group}
 RUN addgroup docker
-RUN adduser -h $HOME -u ${uid} -G ${group} -G dockremap -G docker -G wheel -D ${user}
+RUN adduser -h $HOME -u ${uid} -G ${group} -G dockremap -G docker -G root -D ${user}
 
-RUN apk --no-cache add shadow && usermod -aG docker jenkins
+RUN apk --no-cache add shadow && usermod -aG docker jenkins && usermod -aG dockremap jenkins
 
+RUN set -- dockerd \
+		--host=unix:///var/run/docker.sock \
+		--host=tcp://0.0.0.0:2375
 
 ARG AGENT_WORKDIR=/home/${user}/agent
 
@@ -87,6 +90,7 @@ WORKDIR /home/${user}
 
 
 COPY jenkins-slave /usr/local/bin/jenkins-slave
+COPY wrapper.sh /usr/local/bin/wrapper.sh
 
-ENTRYPOINT ["/usr/local/bin/dockerd-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/wrapper.sh"]
 CMD []
